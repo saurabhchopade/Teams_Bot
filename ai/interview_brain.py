@@ -1,23 +1,23 @@
-"""AI-powered interview brain using OpenAI GPT for intelligent conversations."""
+"""AI-powered interview brain using Google Gemini Flash 2.0 for intelligent conversations."""
 
 import asyncio
 import logging
 import json
 from typing import Dict, List, Optional, Any
 from datetime import datetime
-import openai
+import google.generativeai as genai
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
 
 
 class InterviewAI:
-    """AI brain for conducting intelligent interviews using OpenAI GPT."""
+    """AI brain for conducting intelligent interviews using Google Gemini Flash 2.0."""
     
     def __init__(self):
-        """Initialize the interview AI with OpenAI configuration."""
-        openai.api_key = settings.openai_api_key
-        self.model = settings.openai_model
+        """Initialize the interview AI with Google Gemini configuration."""
+        genai.configure(api_key=settings.google_api_key)
+        self.model = genai.GenerativeModel(settings.gemini_model)
         
         # Conversation state
         self.conversation_history: List[Dict] = []
@@ -150,14 +150,9 @@ class InterviewAI:
             Keep it concise and professional.
             """
             
-            response = await openai.ChatCompletion.acreate(
-                model=self.model,
-                messages=[{"role": "system", "content": opening_prompt}],
-                max_tokens=200,
-                temperature=0.7
-            )
+            response = await self._generate_response(opening_prompt, max_tokens=200, temperature=0.7)
             
-            opening_message = response.choices[0].message.content.strip()
+            opening_message = response.strip()
             
             # Add to conversation history
             self.conversation_history.append({
@@ -215,14 +210,9 @@ class InterviewAI:
             Be objective and constructive in your analysis.
             """
             
-            response = await openai.ChatCompletion.acreate(
-                model=self.model,
-                messages=[{"role": "system", "content": analysis_prompt}],
-                max_tokens=500,
-                temperature=0.3
-            )
+            response = await self._generate_response(analysis_prompt, max_tokens=500, temperature=0.3)
             
-            analysis_text = response.choices[0].message.content.strip()
+            analysis_text = response.strip()
             
             try:
                 analysis = json.loads(analysis_text)
@@ -307,14 +297,9 @@ class InterviewAI:
             Return only the question, no additional text.
             """
             
-            response = await openai.ChatCompletion.acreate(
-                model=self.model,
-                messages=[{"role": "system", "content": question_prompt}],
-                max_tokens=200,
-                temperature=0.8
-            )
+            response = await self._generate_response(question_prompt, max_tokens=200, temperature=0.8)
             
-            next_question = response.choices[0].message.content.strip()
+            next_question = response.strip()
             
             # Add to conversation history
             self.conversation_history.append({
@@ -395,14 +380,9 @@ class InterviewAI:
             }}
             """
             
-            response = await openai.ChatCompletion.acreate(
-                model=self.model,
-                messages=[{"role": "system", "content": assessment_prompt}],
-                max_tokens=800,
-                temperature=0.3
-            )
+            response = await self._generate_response(assessment_prompt, max_tokens=800, temperature=0.3)
             
-            assessment_text = response.choices[0].message.content.strip()
+            assessment_text = response.strip()
             
             try:
                 final_assessment = json.loads(assessment_text)
@@ -467,6 +447,40 @@ class InterviewAI:
             return True
         
         return False
+    
+    async def _generate_response(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7) -> str:
+        """
+        Generate response using Google Gemini Flash 2.0.
+        
+        Args:
+            prompt: Input prompt for the model
+            max_tokens: Maximum tokens to generate
+            temperature: Sampling temperature
+            
+        Returns:
+            Generated response text
+        """
+        try:
+            # Configure generation parameters
+            generation_config = genai.types.GenerationConfig(
+                max_output_tokens=max_tokens,
+                temperature=temperature,
+                top_p=0.95,
+                top_k=64,
+            )
+            
+            # Generate response
+            response = await self.model.generate_content_async(
+                prompt,
+                generation_config=generation_config
+            )
+            
+            return response.text
+            
+        except Exception as e:
+            logger.error(f"Error generating response with Gemini: {str(e)}")
+            # Fallback response
+            return "I apologize, but I'm having trouble generating a response right now. Let's continue with the interview."
     
     def get_conversation_summary(self) -> Dict[str, Any]:
         """

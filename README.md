@@ -28,13 +28,14 @@ A comprehensive Python-based AI interview bot that can join Microsoft Teams meet
 
 2. **Azure Bot Framework** registration
 3. **Azure Cognitive Services** (Speech Services)
-4. **OpenAI API** access
+4. **Google Gemini API** access
 
 ### System Requirements
 - Python 3.8+
 - Windows/Linux/macOS
 - Microphone and speakers (for local testing)
 - Stable internet connection
+- Google Cloud account with Gemini API access
 
 ## 🛠️ Installation
 
@@ -72,8 +73,9 @@ BOT_ENDPOINT=https://your-bot-endpoint.ngrok.io
 AZURE_SPEECH_KEY=your-speech-service-key
 AZURE_SPEECH_REGION=eastus
 
-# OpenAI Configuration
-OPENAI_API_KEY=your-openai-api-key
+# Google Gemini Configuration
+GOOGLE_API_KEY=your-google-gemini-api-key
+GEMINI_MODEL=gemini-2.0-flash-exp
 ```
 
 ### 4. Setup Webhook Endpoint (Development)

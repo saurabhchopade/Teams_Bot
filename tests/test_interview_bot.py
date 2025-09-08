@@ -183,11 +183,8 @@ class TestInterviewAI:
         candidate_info = {"name": "John Doe", "experience_level": "mid"}
         role_info = {"title": "Software Developer"}
         
-        with patch('openai.ChatCompletion.acreate') as mock_openai:
-            mock_response = Mock()
-            mock_response.choices = [Mock()]
-            mock_response.choices[0].message.content = "Welcome to the interview!"
-            mock_openai.return_value = mock_response
+        with patch.object(interview_ai, '_generate_response') as mock_generate:
+            mock_generate.return_value = "Welcome to the interview!"
             
             result = await interview_ai.initialize_interview(candidate_info, role_info)
             
@@ -201,10 +198,8 @@ class TestInterviewAI:
         question = "Tell me about yourself"
         answer = "I'm a software developer with 5 years of experience"
         
-        with patch('openai.ChatCompletion.acreate') as mock_openai:
-            mock_response = Mock()
-            mock_response.choices = [Mock()]
-            mock_response.choices[0].message.content = json.dumps({
+        with patch.object(interview_ai, '_generate_response') as mock_generate:
+            mock_generate.return_value = json.dumps({
                 "content_quality": {"score": 8, "reasoning": "Good response"},
                 "communication_clarity": {"score": 7, "reasoning": "Clear communication"},
                 "technical_depth": {"score": 6, "reasoning": "Basic technical info"},
@@ -213,7 +208,6 @@ class TestInterviewAI:
                 "overall_assessment": "Good introduction",
                 "follow_up_suggestions": ["Ask about specific projects"]
             })
-            mock_openai.return_value = mock_response
             
             result = await interview_ai.analyze_response(question, answer)
             

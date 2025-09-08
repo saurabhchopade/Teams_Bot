@@ -1,0 +1,476 @@
+# Microsoft Teams Interview Bot - Local Setup Guide
+
+A comprehensive AI-powered interview bot that joins Microsoft Teams meetings, conducts intelligent interviews using Google Gemini Flash 2.0, and provides detailed candidate assessments with natural voice interaction.
+
+## 🚀 Quick Start Guide
+
+### Prerequisites
+Before you begin, ensure you have:
+- Python 3.8 or higher installed
+- A Microsoft Azure account with admin privileges
+- A Google Cloud account with Gemini API access
+- Basic knowledge of command line operations
+
+## 📋 Required API Keys and Services
+
+### 1. Azure Services Setup
+
+#### A. Azure AD App Registration
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Navigate to **Azure Active Directory** > **App registrations**
+3. Click **New registration**
+4. Fill in the details:
+   - **Name**: `Teams Interview Bot`
+   - **Supported account types**: `Accounts in this organizational directory only`
+   - **Redirect URI**: Leave blank for now
+5. Click **Register**
+6. Note down the **Application (client) ID** and **Directory (tenant) ID**
+
+#### B. Create Client Secret
+1. In your app registration, go to **Certificates & secrets**
+2. Click **New client secret**
+3. Add description: `Interview Bot Secret`
+4. Set expiration: `24 months`
+5. Click **Add**
+6. **IMPORTANT**: Copy the secret value immediately (you won't see it again)
+
+#### C. Set API Permissions
+1. Go to **API permissions** in your app registration
+2. Click **Add a permission**
+3. Select **Microsoft Graph**
+4. Choose **Application permissions**
+5. Add these permissions:
+   ```
+   OnlineMeetings.ReadWrite.All
+   Calls.AccessMedia.All
+   Calls.JoinGroupCall.All
+   CallRecords.Read.All
+   ```
+6. Click **Grant admin consent** (requires admin privileges)
+
+#### D. Azure Bot Framework Registration
+1. In Azure Portal, search for **Azure Bot**
+2. Click **Create**
+3. Fill in details:
+   - **Bot handle**: `teams-interview-bot-[random]`
+   - **Subscription**: Your subscription
+   - **Resource group**: Create new or use existing
+   - **Pricing tier**: `F0 (Free)`
+   - **Microsoft App ID**: Use the App ID from step A
+4. Click **Create**
+
+#### E. Azure Speech Services
+1. Search for **Speech Services** in Azure Portal
+2. Click **Create**
+3. Fill in details:
+   - **Name**: `teams-interview-speech`
+   - **Subscription**: Your subscription
+   - **Location**: `East US` (recommended)
+   - **Pricing tier**: `F0` (Free) or `S0` (Standard)
+4. Click **Create**
+5. Go to **Keys and Endpoint** and copy **Key 1**
+
+### 2. Google Gemini API Setup
+
+#### A. Create Google Cloud Project
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a new project or select existing one
+3. Enable the **Generative AI API**
+
+#### B. Get Gemini API Key
+1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Click **Create API Key**
+3. Select your Google Cloud project
+4. Copy the generated API key
+
+## 🛠️ Local Installation Steps
+
+### Step 1: Clone and Setup Project
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd teams-interview-bot
+
+# Create virtual environment (recommended)
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+### Step 2: Environment Configuration
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit the .env file with your credentials
+```
+
+Fill in your `.env` file with the following values:
+
+```env
+# Azure AD Configuration (from Step 1A-1C)
+AZURE_CLIENT_ID=your-application-client-id-here
+AZURE_CLIENT_SECRET=your-client-secret-here
+AZURE_TENANT_ID=your-directory-tenant-id-here
+
+# Azure Bot Framework (from Step 1D)
+BOT_APP_ID=your-application-client-id-here
+BOT_APP_PASSWORD=your-client-secret-here
+BOT_ENDPOINT=https://your-ngrok-url.ngrok.io
+
+# Azure Cognitive Services (from Step 1E)
+AZURE_SPEECH_KEY=your-speech-service-key-here
+AZURE_SPEECH_REGION=eastus
+
+# Google Gemini Configuration (from Step 2B)
+GOOGLE_API_KEY=your-google-gemini-api-key-here
+GEMINI_MODEL=gemini-2.0-flash-exp
+
+# Application Settings
+CALLBACK_URL=https://your-ngrok-url.ngrok.io
+LOG_LEVEL=INFO
+INTERVIEW_DURATION_MINUTES=45
+MAX_QUESTIONS=15
+```
+
+### Step 3: Setup Webhook Endpoint (Development)
+
+For local development, you need to expose your local server to the internet for Teams webhooks:
+
+#### Install ngrok
+1. Download ngrok from [https://ngrok.com/download](https://ngrok.com/download)
+2. Extract and install ngrok
+3. Sign up for a free ngrok account
+4. Get your auth token from the ngrok dashboard
+5. Configure ngrok:
+   ```bash
+   ngrok config add-authtoken your-auth-token-here
+   ```
+
+#### Start ngrok tunnel
+```bash
+# In a separate terminal, start ngrok
+ngrok http 5000
+
+# Copy the HTTPS URL (e.g., https://abc123.ngrok.io)
+# Update your .env file:
+BOT_ENDPOINT=https://abc123.ngrok.io
+CALLBACK_URL=https://abc123.ngrok.io
+```
+
+### Step 4: Update Azure Bot Configuration
+1. Go back to your Azure Bot resource
+2. Go to **Configuration**
+3. Update **Messaging endpoint** to: `https://your-ngrok-url.ngrok.io/webhook/teams`
+4. Click **Apply**
+
+## 🚀 Running the Bot Locally
+
+### Method 1: Interactive Mode (Recommended for beginners)
+```bash
+# Make the script executable (macOS/Linux)
+chmod +x scripts/run_interview.sh
+
+# Run interactive setup
+./scripts/run_interview.sh
+```
+
+This will guide you through:
+- Entering the Teams meeting URL
+- Candidate information
+- Interview settings
+- Starting the interview
+
+### Method 2: Command Line Mode
+```bash
+# Basic usage
+python main.py \
+  --meeting_url "https://teams.microsoft.com/l/meetup-join/19%3ameeting_..." \
+  --candidate_name "John Doe" \
+  --role "Software Developer"
+
+# Advanced usage with all options
+python main.py \
+  --meeting_url "https://teams.microsoft.com/l/meetup-join/..." \
+  --candidate_name "Jane Smith" \
+  --candidate_email "jane@example.com" \
+  --role "Senior Python Developer" \
+  --experience_level "senior" \
+  --focus_areas "python" "algorithms" "system_design" \
+  --duration 60 \
+  --log_level "DEBUG"
+```
+
+### Method 3: Webhook Server Only
+If you want to run just the webhook server for testing:
+```bash
+python -m webhooks.teams_webhook
+```
+
+## 🧪 Testing Your Setup
+
+### 1. Test Environment Variables
+```bash
+python -c "
+from config.settings import settings
+print('✅ Azure Client ID:', settings.azure_client_id[:8] + '...')
+print('✅ Google API Key:', settings.google_api_key[:8] + '...')
+print('✅ Speech Key:', settings.azure_speech_key[:8] + '...')
+print('✅ Configuration loaded successfully!')
+"
+```
+
+### 2. Test Azure Authentication
+```bash
+python -c "
+import asyncio
+from auth.teams_auth import TeamsAuthenticator
+
+async def test_auth():
+    auth = TeamsAuthenticator()
+    try:
+        token = await auth.get_access_token()
+        print('✅ Azure authentication successful!')
+        return True
+    except Exception as e:
+        print('❌ Azure authentication failed:', str(e))
+        return False
+
+asyncio.run(test_auth())
+"
+```
+
+### 3. Test Google Gemini API
+```bash
+python -c "
+import google.generativeai as genai
+from config.settings import settings
+
+genai.configure(api_key=settings.google_api_key)
+model = genai.GenerativeModel(settings.gemini_model)
+
+try:
+    response = model.generate_content('Hello, this is a test.')
+    print('✅ Google Gemini API working!')
+    print('Response:', response.text[:100] + '...')
+except Exception as e:
+    print('❌ Google Gemini API failed:', str(e))
+"
+```
+
+### 4. Test Speech Services
+```bash
+python -c "
+import azure.cognitiveservices.speech as speechsdk
+from config.settings import settings
+
+speech_config = speechsdk.SpeechConfig(
+    subscription=settings.azure_speech_key,
+    region=settings.azure_speech_region
+)
+print('✅ Speech Services configuration loaded!')
+print('Region:', speech_config.region)
+"
+```
+
+### 5. Run Unit Tests
+```bash
+# Install test dependencies
+pip install pytest pytest-asyncio
+
+# Run all tests
+pytest tests/ -v
+
+# Run specific test categories
+pytest tests/test_interview_bot.py::TestTeamsAuthenticator -v
+```
+
+## 🔧 Troubleshooting Common Issues
+
+### Issue 1: "Failed to acquire access token"
+**Cause**: Azure AD configuration problems
+**Solutions**:
+- Verify your `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, and `AZURE_TENANT_ID`
+- Ensure admin consent is granted for API permissions
+- Check that the client secret hasn't expired
+
+### Issue 2: "Invalid Teams meeting URL"
+**Cause**: Incorrect meeting URL format
+**Solutions**:
+- Ensure the URL contains `teams.microsoft.com` or `teams.live.com`
+- Use the full meeting join URL, not a shortened version
+- Make sure the meeting is active and not expired
+
+### Issue 3: "Google Gemini API authentication failed"
+**Cause**: Invalid or missing Google API key
+**Solutions**:
+- Verify your `GOOGLE_API_KEY` is correct
+- Ensure the Generative AI API is enabled in your Google Cloud project
+- Check API quotas and billing settings
+
+### Issue 4: "Speech recognition not working"
+**Cause**: Audio or Speech Services configuration issues
+**Solutions**:
+- Verify `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION`
+- Check microphone permissions on your system
+- Ensure Speech Services resource is active in Azure
+
+### Issue 5: "Webhook endpoint not reachable"
+**Cause**: ngrok or network configuration issues
+**Solutions**:
+- Ensure ngrok is running and the URL is correct
+- Update `BOT_ENDPOINT` in Azure Bot configuration
+- Check firewall settings
+
+### Issue 6: "Bot can't join meeting"
+**Cause**: Insufficient permissions or meeting settings
+**Solutions**:
+- Ensure the bot has proper Graph API permissions
+- Check if the meeting allows external participants
+- Verify the meeting is active and not in lobby mode
+
+## 📊 Understanding the Output
+
+When the bot runs successfully, you'll see:
+
+### Console Output
+```
+🤖 Microsoft Teams Interview Bot
+===============================
+✅ Environment configuration validated
+🎯 Interactive Interview Setup
+==============================
+📅 Teams Meeting URL: [entered URL]
+👤 Candidate Name: John Doe
+💼 Role: Software Developer
+📊 Experience Level: mid
+⏱️  Interview Duration: 45 minutes
+📝 Log Level: INFO
+
+🚀 Starting interview...
+🌐 Starting webhook server...
+🎤 Starting interview bot...
+✅ Successfully joined Teams meeting
+🎯 Interview initialized successfully
+📝 Speaking question: Hello! I'm your AI interviewer today...
+👂 Listening for candidate response...
+🧠 Analyzing response...
+📝 Speaking next question: Can you tell me about...
+...
+✅ Interview completed successfully!
+📊 Results saved to: interview_results_20241201_143022.json
+```
+
+### Generated Files
+- `interview_results_[timestamp].json` - Complete interview results
+- `interview_bot.log` - Detailed application logs
+- Transcript with timestamps and analysis
+
+### Interview Results Structure
+```json
+{
+  "session_id": "interview_20241201_143022",
+  "overall_score": 8.2,
+  "category_scores": {
+    "technical_skills": 8.5,
+    "communication": 8.0,
+    "problem_solving": 8.3,
+    "cultural_fit": 7.8
+  },
+  "recommendation": "hire",
+  "strengths": [
+    "Strong technical foundation",
+    "Clear communication style"
+  ],
+  "areas_for_improvement": [
+    "Could provide more specific examples"
+  ],
+  "transcript": [...],
+  "session_metadata": {...}
+}
+```
+
+## 🔒 Security and Privacy Notes
+
+### Data Handling
+- Audio is processed in real-time and not permanently stored
+- Interview transcripts are saved locally only
+- All API communications use secure HTTPS
+- Candidate data is handled according to privacy policies
+
+### Best Practices
+- Keep your API keys secure and never commit them to version control
+- Regularly rotate client secrets and API keys
+- Use the principle of least privilege for Azure permissions
+- Monitor API usage and costs
+- Obtain proper consent before recording interviews
+
+## 🚀 Next Steps
+
+Once you have the bot running locally:
+
+1. **Test with a practice meeting** - Create a test Teams meeting and run through the flow
+2. **Customize interview questions** - Modify the question templates in `ai/interview_brain.py`
+3. **Adjust voice settings** - Configure voice style and speech parameters
+4. **Set up monitoring** - Implement logging and error tracking for production use
+5. **Deploy to production** - Use Azure Container Instances or App Service for hosting
+
+## 📞 Support and Resources
+
+### Documentation Links
+- [Azure Bot Framework Documentation](https://docs.microsoft.com/en-us/azure/bot-service/)
+- [Microsoft Graph API Documentation](https://docs.microsoft.com/en-us/graph/)
+- [Azure Speech Services Documentation](https://docs.microsoft.com/en-us/azure/cognitive-services/speech-service/)
+- [Google Gemini API Documentation](https://ai.google.dev/docs)
+
+### Common Commands Reference
+```bash
+# Start development server
+python main.py --meeting_url "..." --candidate_name "..."
+
+# Run tests
+pytest tests/ -v
+
+# Check configuration
+python -c "from config.settings import settings; print('Config loaded!')"
+
+# Start webhook server only
+python -m webhooks.teams_webhook
+
+# Interactive setup
+./scripts/run_interview.sh
+```
+
+### Environment Variables Quick Reference
+```env
+# Required Azure Settings
+AZURE_CLIENT_ID=your-app-registration-client-id
+AZURE_CLIENT_SECRET=your-app-registration-secret
+AZURE_TENANT_ID=your-azure-tenant-id
+BOT_APP_ID=same-as-azure-client-id
+BOT_APP_PASSWORD=same-as-azure-client-secret
+AZURE_SPEECH_KEY=your-speech-services-key
+AZURE_SPEECH_REGION=eastus
+
+# Required Google Settings
+GOOGLE_API_KEY=your-google-gemini-api-key
+GEMINI_MODEL=gemini-2.0-flash-exp
+
+# Required Webhook Settings
+BOT_ENDPOINT=https://your-ngrok-url.ngrok.io
+CALLBACK_URL=https://your-ngrok-url.ngrok.io
+
+# Optional Settings
+LOG_LEVEL=INFO
+INTERVIEW_DURATION_MINUTES=45
+MAX_QUESTIONS=15
+```
+
+This guide should get you up and running with the Teams Interview Bot locally. If you encounter any issues, check the troubleshooting section or refer to the detailed logs for more information.

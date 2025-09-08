@@ -18,7 +18,7 @@ fi
 source .env
 
 # Check required environment variables
-required_vars=("AZURE_CLIENT_ID" "AZURE_CLIENT_SECRET" "AZURE_TENANT_ID" "OPENAI_API_KEY")
+required_vars=("AZURE_CLIENT_ID" "AZURE_CLIENT_SECRET" "AZURE_TENANT_ID" "GOOGLE_API_KEY")
 missing_vars=()
 
 for var in "${required_vars[@]}"; do

@@ -22,9 +22,9 @@ class Settings(BaseSettings):
     azure_speech_key: str = Field(..., env="AZURE_SPEECH_KEY")
     azure_speech_region: str = Field("eastus", env="AZURE_SPEECH_REGION")
     
-    # OpenAI Configuration
-    openai_api_key: str = Field(..., env="OPENAI_API_KEY")
-    openai_model: str = Field("gpt-4", env="OPENAI_MODEL")
+    # Google Gemini Configuration
+    google_api_key: str = Field(..., env="GOOGLE_API_KEY")
+    gemini_model: str = Field("gemini-2.0-flash-exp", env="GEMINI_MODEL")
     
     # Application Settings
     callback_url: str = Field(..., env="CALLBACK_URL")
