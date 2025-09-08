@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  teams-interview-bot:
+    build: .
+    container_name: teams-interview-bot
+    ports:
+      - "5000:5000"
+    environment:
+      # Azure AD Configuration
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      
+      # Bot Framework Configuration
+      - BOT_APP_ID=${BOT_APP_ID}
+      - BOT_APP_PASSWORD=${BOT_APP_PASSWORD}
+      - BOT_ENDPOINT=${BOT_ENDPOINT}
+      
+      # Azure Speech Services
+      - AZURE_SPEECH_KEY=${AZURE_SPEECH_KEY}
+      - AZURE_SPEECH_REGION=${AZURE_SPEECH_REGION}
+      
+      # OpenAI Configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4}
+      
+      # Application Settings
+      - CALLBACK_URL=${CALLBACK_URL}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - INTERVIEW_DURATION_MINUTES=${INTERVIEW_DURATION_MINUTES:-45}
+      - MAX_QUESTIONS=${MAX_QUESTIONS:-15}
+    
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    networks:
+      - interview-bot-network
+
+  # Optional: Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: interview-bot-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - interview-bot-network
+    command: redis-server --appendonly yes
+
+  # Optional: PostgreSQL for persistent data storage
+  postgres:
+    image: postgres:15-alpine
+    container_name: interview-bot-postgres
+    environment:
+      - POSTGRES_DB=interview_bot
+      - POSTGRES_USER=interview_bot
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+    networks:
+      - interview-bot-network
+
+  # Optional: Nginx reverse proxy for production
+  nginx:
+    image: nginx:alpine
+    container_name: interview-bot-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - teams-interview-bot
+    restart: unless-stopped
+    networks:
+      - interview-bot-network
+
+volumes:
+  redis_data:
+  postgres_data:
+
+networks:
+  interview-bot-network:
+    driver: bridge

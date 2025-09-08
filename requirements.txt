@@ -1,0 +1,39 @@
+# Core Azure and Microsoft Graph dependencies
+msal==1.24.1
+azure-identity==1.15.0
+azure-cognitiveservices-speech==1.34.0
+msgraph-core==0.2.2
+requests==2.31.0
+
+# Bot Framework and Teams integration
+botbuilder-core==4.15.0
+botbuilder-schema==4.15.0
+botbuilder-integration-aiohttp==4.15.0
+botframework-connector==4.15.0
+
+# AI and OpenAI integration
+openai==1.3.7
+tiktoken==0.5.2
+
+# Web framework and async support
+flask==3.0.0
+aiohttp==3.9.1
+asyncio-mqtt==0.13.0
+
+# Audio processing and utilities
+pyaudio==0.2.11
+wave==0.0.2
+numpy==1.24.3
+scipy==1.11.4
+
+# Configuration and utilities
+python-dotenv==1.0.0
+pydantic==2.5.2
+structlog==23.2.0
+tenacity==8.2.3
+
+# Development and testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+black==23.11.0
+flake8==6.1.0
