@@ -26,29 +26,9 @@ class SpeechProcessor:
         
         # Configure speech recognition settings
         self.speech_config.speech_recognition_language = "en-US"
-        
-        # Configure timeout and connection settings
         self.speech_config.set_property(
-            speechsdk.PropertyId.SpeechServiceConnection_InitialSilenceTimeoutMs,
-            "10000"  # 10 seconds initial silence timeout
-        )
-        self.speech_config.set_property(
-            speechsdk.PropertyId.SpeechServiceConnection_EndSilenceTimeoutMs,
-            "3000"  # 3 seconds end silence timeout
-        )
-        self.speech_config.set_property(
-            speechsdk.PropertyId.SpeechServiceConnection_RecoTimeout,
-            "30000"  # 30 seconds recognition timeout
-        )
-        self.speech_config.set_property(
-            speechsdk.PropertyId.Speech_SegmentationSilenceTimeoutMs,
-            "2000"  # 2 seconds segmentation timeout
-        )
-        
-        # Enable detailed logging for debugging
-        self.speech_config.set_property(
-            speechsdk.PropertyId.Speech_LogFilename,
-            "speech_debug.log"
+            speechsdk.PropertyId.SpeechServiceConnection_ContinuousRecognitionTimeout_Ms,
+            "300000"  # 5 minutes
         )
         
         # Configure text-to-speech settings
@@ -74,11 +54,6 @@ class SpeechProcessor:
             True if initialization successful
         """
         try:
-            # Test Azure Speech Service connection first
-            if not self._test_speech_service_connection():
-                logger.error("Azure Speech Service connection test failed")
-                return False
-            
             self.speech_recognizer = speechsdk.SpeechRecognizer(
                 speech_config=self.speech_config,
                 audio_config=self.audio_config_input
@@ -155,13 +130,9 @@ class SpeechProcessor:
         """
         try:
             if self.speech_recognizer and self.is_listening:
-                try:
-                    self.speech_recognizer.stop_continuous_recognition_async().get(timeout=5)
-                    logger.info("Stopped continuous speech recognition successfully")
-                except Exception as stop_error:
-                    logger.warning(f"Error stopping recognition (continuing anyway): {str(stop_error)}")
-                
+                self.speech_recognizer.stop_continuous_recognition()
                 self.is_listening = False
+                logger.info("Stopped continuous speech recognition")
             
             return True
             

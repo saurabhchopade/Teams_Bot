@@ -116,45 +116,6 @@ async def run_interview_bot(
             await orchestrator._cleanup_session()
 
 
-def _validate_environment() -> bool:
-    """
-    Validate that all required environment variables are set.
-    
-    Returns:
-        True if environment is valid
-    """
-    try:
-        required_vars = [
-            'AZURE_CLIENT_ID',
-            'AZURE_CLIENT_SECRET', 
-            'AZURE_TENANT_ID',
-            'AZURE_SPEECH_KEY',
-            'AZURE_SPEECH_REGION',
-            'GOOGLE_API_KEY'
-        ]
-        
-        missing_vars = []
-        for var in required_vars:
-            if not getattr(settings, var.lower(), None):
-                missing_vars.append(var)
-        
-        if missing_vars:
-            logger.error(f"Missing required environment variables: {', '.join(missing_vars)}")
-            return False
-        
-        # Validate Azure Speech region format
-        if not settings.azure_speech_region or len(settings.azure_speech_region) < 2:
-            logger.error("Invalid Azure Speech region")
-            return False
-        
-        logger.info("Environment validation passed")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Environment validation error: {str(e)}")
-        return False
-
-
 def print_interview_summary(results: Dict):
     """Print a summary of the interview results."""
     try:

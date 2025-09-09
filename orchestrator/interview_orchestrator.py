@@ -73,43 +73,6 @@ class InterviewBotOrchestrator:
             logger.error(f"Error initializing orchestrator: {str(e)}")
             return False
     
-    async def _test_network_connectivity(self) -> bool:
-        """
-        Test network connectivity to required services.
-        
-        Returns:
-            True if connectivity tests pass
-        """
-        try:
-            import aiohttp
-            import asyncio
-            
-            # Test Azure Speech Service endpoint
-            speech_endpoint = f"https://{settings.azure_speech_region}.api.cognitive.microsoft.com"
-            
-            async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
-                try:
-                    async with session.get(speech_endpoint) as response:
-                        logger.info(f"Azure Speech Service endpoint reachable: {response.status}")
-                except Exception as e:
-                    logger.warning(f"Azure Speech Service endpoint test failed: {str(e)}")
-                    return False
-                
-                # Test Google Gemini API endpoint
-                try:
-                    gemini_endpoint = "https://generativelanguage.googleapis.com"
-                    async with session.get(gemini_endpoint) as response:
-                        logger.info(f"Google Gemini API endpoint reachable: {response.status}")
-                except Exception as e:
-                    logger.warning(f"Google Gemini API endpoint test failed: {str(e)}")
-                    return False
-            
-            return True
-            
-        except Exception as e:
-            logger.error(f"Network connectivity test error: {str(e)}")
-            return False
-    
     async def start_interview_session(self, meeting_url: str, candidate_info: Dict, role_info: Dict = None) -> bool:
         """
         Start a complete interview session.

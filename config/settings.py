@@ -22,11 +22,6 @@ class Settings(BaseSettings):
     azure_speech_key: str = Field(..., env="AZURE_SPEECH_KEY")
     azure_speech_region: str = Field("eastus", env="AZURE_SPEECH_REGION")
     
-    # Speech Service Configuration
-    speech_recognition_timeout_ms: int = Field(30000, env="SPEECH_RECOGNITION_TIMEOUT_MS")
-    speech_initial_silence_timeout_ms: int = Field(10000, env="SPEECH_INITIAL_SILENCE_TIMEOUT_MS")
-    speech_end_silence_timeout_ms: int = Field(3000, env="SPEECH_END_SILENCE_TIMEOUT_MS")
-    
     # Google Gemini Configuration
     google_api_key: str = Field(..., env="GOOGLE_API_KEY")
     gemini_model: str = Field("gemini-2.0-flash-exp", env="GEMINI_MODEL")
