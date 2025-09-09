@@ -54,6 +54,11 @@ class InterviewBotOrchestrator:
                 logger.error("Failed to authenticate bot")
                 return False
             
+            # Test network connectivity
+            if not await self._test_network_connectivity():
+                logger.error("Network connectivity test failed")
+                return False
+            
             # Initialize speech processor
             if not self.speech_processor.initialize_recognizer():
                 logger.error("Failed to initialize speech recognizer")
